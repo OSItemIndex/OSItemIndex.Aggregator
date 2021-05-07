@@ -150,7 +150,7 @@ namespace OSItemIndex.Aggregator.Services
                 throw;
             }
 
-            using var stream = await response.Content.ReadAsStreamAsync();
+            await using var stream = await response.Content.ReadAsStreamAsync();
             using var dbFactory = _dbContextHelper.GetFactory();
             {
                 int itemsImported;
@@ -161,7 +161,7 @@ namespace OSItemIndex.Aggregator.Services
                 try
                 {
                     await conn.ExecuteNonQueryAsync(_sqlCreate); // Create temp table
-                    using (var importer = conn.BeginBinaryImport(_sqlCopy))
+                    await using (var importer = conn.BeginBinaryImport(_sqlCopy))
                     {
                         ImportFromContentStream(stream, importer, out itemsImported);
                         await importer.CompleteAsync();

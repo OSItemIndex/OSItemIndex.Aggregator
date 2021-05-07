@@ -154,7 +154,7 @@ namespace OSItemIndex.Aggregator.Services
                 throw;
             }
 
-            using var stream = await response.Content.ReadAsStreamAsync();
+            await using var stream = await response.Content.ReadAsStreamAsync();
             using var dbFactory = _dbContextHelper.GetFactory();
             {
                 int itemsImported;
@@ -171,7 +171,7 @@ namespace OSItemIndex.Aggregator.Services
                     var sqlUpsert = $"INSERT INTO {_sqlMainTableName} (id, {modelColumn}) SELECT * FROM {_sqlTempTableName} ON CONFLICT (id) DO UPDATE SET id=EXCLUDED.id, {modelColumn}=EXCLUDED.{modelColumn}";
 
                     await conn.ExecuteNonQueryAsync(sqlCreate); // Create temp table
-                    using (var importer = conn.BeginBinaryImport(sqlCopy))
+                    await using (var importer = conn.BeginBinaryImport(sqlCopy))
                     {
                         ImportFromContentStream(stream, importer, out itemsImported, out foundTimestamp);
                         await importer.CompleteAsync();

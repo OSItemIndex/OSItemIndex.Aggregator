@@ -16,7 +16,6 @@ namespace OSItemIndex.Aggregator
             Log.Logger = new LoggerConfiguration()
                          .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
                          .Enrich.FromLogContext()
-                         .Enrich.WithThreadId()
                          .Enrich.WithExceptionDetails()
                          .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
                          .CreateBootstrapLogger();
@@ -41,7 +40,6 @@ namespace OSItemIndex.Aggregator
                        {
                            configuration.MinimumLevel.Override("Microsoft", LogEventLevel.Information)
                                         .Enrich.FromLogContext()
-                                        .Enrich.WithThreadId()
                                         .Enrich.WithExceptionDetails()
                                         .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}"); // {Properties:j}
                        });

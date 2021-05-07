@@ -9,7 +9,7 @@ namespace OSItemIndex.Aggregator
 {
     public class Startup
     {
-        public readonly IConfiguration Configuration;
+        private readonly IConfiguration _configuration;
 
         public Startup(IWebHostEnvironment env)
         {
@@ -22,13 +22,13 @@ namespace OSItemIndex.Aggregator
             builder.AddKeyPerFile("/run/secrets", true); // docker secrets - https://docs.microsoft.com/en-us/dotnet/core/extensions/configuration-providers#key-per-file-configuration-provider
             builder.AddEnvironmentVariables();
 
-            Configuration = builder.Build();
+            _configuration = builder.Build();
         }
 
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            services.AddEntityFrameworkContext(Configuration);
+            services.AddEntityFrameworkContext(_configuration);
 
             services.AddHttpClient<OsrsBoxClient>();
             services.AddHttpClient<RealtimePriceClient>();
