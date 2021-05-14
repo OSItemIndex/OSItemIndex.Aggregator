@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OSItemIndex.Aggregator.Services;
+using OSItemIndex.Data.Database;
 using OSItemIndex.Data.Extensions;
 
 namespace OSItemIndex.Aggregator
@@ -29,6 +30,7 @@ namespace OSItemIndex.Aggregator
         {
             services.AddControllers();
             services.AddEntityFrameworkContext(_configuration);
+            services.AddSingleton<IDbInitializerService, DbInitializerService>();
 
             services.AddHttpClient<OsrsBoxClient>();
             services.AddHttpClient<RealtimePriceClient>();

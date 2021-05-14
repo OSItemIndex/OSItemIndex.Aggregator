@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using OSItemIndex.Aggregator.Services;
+using OSItemIndex.Data.Database;
 using Serilog;
 using Serilog.Events;
 using Serilog.Exceptions;
@@ -23,7 +24,11 @@ namespace OSItemIndex.Aggregator
             var webHost = CreateWebHost(args).Build();
             using (var scope = webHost.Services.CreateScope()) // Start all IStatefulServices
             {
-                var servicesController = scope.ServiceProvider.GetRequiredService<IStatefulServiceRepository>();
+                var serviceProvider = scope.ServiceProvider;
+                var servicesController = serviceProvider.GetRequiredService<IStatefulServiceRepository>();
+                var dbInitializer = serviceProvider.GetRequiredService<IDbInitializerService>();
+
+                await dbInitializer.InitializeDatabaseAsync(serviceProvider);
                 await servicesController.StartServicesAsync();
             }
             await webHost.RunAsync();
