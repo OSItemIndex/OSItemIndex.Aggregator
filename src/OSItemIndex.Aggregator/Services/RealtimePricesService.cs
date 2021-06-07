@@ -99,7 +99,6 @@ namespace OSItemIndex.Aggregator.Services
             _isWorking = false;
         }
 
-
         private static bool CheckStopwatch(Stopwatch stopwatch, TimeSpan interval, TimeSpan offset)
         {
             if (stopwatch.IsRunning)

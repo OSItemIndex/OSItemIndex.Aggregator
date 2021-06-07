@@ -10,9 +10,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\docker-compose.yml = ..\docker-compose.yml
 		..\.env = ..\.env
 		..\secrets\pg-password = ..\secrets\pg-password
-		aggregator.dockerfile = aggregator.dockerfile
 		README.md = README.md
 		..\README.md = ..\README.md
+		Dockerfile = Dockerfile
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OSItemIndex.Data", "src\OSItemIndex.Data\OSItemIndex.Data.csproj", "{D16652A8-9D24-484D-AE69-DD0ECD3C48E7}"
