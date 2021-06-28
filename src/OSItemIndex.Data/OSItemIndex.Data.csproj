@@ -4,6 +4,8 @@
         <TargetFramework>net5.0</TargetFramework>
         <OutputType>Library</OutputType>
         <Nullable>annotations</Nullable>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <NoWarn>$(NoWarn);1591</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
@@ -19,6 +21,10 @@
       </PackageReference>
       <PackageReference Include="Microsoft.Extensions.Configuration.KeyPerFile" Version="5.0.5" />
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="5.0.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="OSItemIndex.Data.csproj.DotSettings" />
     </ItemGroup>
 
 </Project>

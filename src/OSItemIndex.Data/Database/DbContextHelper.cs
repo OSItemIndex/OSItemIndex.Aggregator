@@ -1,26 +1,5 @@
-﻿/***
-  * @author     Lampjaw
-  * @date       6-30-2019
-  * @github     https://github.com/voidwell/Voidwell.DaybreakGames/blob/master/src/Voidwell.DaybreakGames.Data/DbContextHelper.cs
-*/
-
-/*** Original author: https://github.com/Lampjaw
- * Modified by https://github.com/Twinki14 for OSItemIndex
- * DbContextHelper: Helper class we can use with DI to inject a factory (DbContextFactory) of our dbContext into our modules/services
- * DbContextFactory: Contains a scopeFactory instance and creates a new DbContext instance from the scopeFactory
- * General notes:
- *      Using a factory pattern instead of sharing a DbContext between our services injected by DI gives us the benefit of concurrency/thread-safety,
- *          better performance, and memory management assuming we use it properly. We inject DbContextHelper into each service that requires access to our DbContext
- *          with DI, use GetFactory to access the factory which creates a new underlying DbContext instance using the scope factory,
- *          and GetDbContext to access that context. When we no longer need to use our DbContext, we dispose of our DbContextFactory instance created
- *          by the injected DbContextHelper instance, which also disposes the underlying DbContext. With the help of a DbContextPool this gives us a ton of benefits
- *          as an API making multiple queries to our DbContext.
- *
- * Potential improvements:
- *      Making use of generics so this code can be easily-re-usable and testable
- */
-
-using System;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -40,10 +19,10 @@ namespace OSItemIndex.Data.Database
         /// </summary>
         public DbContextFactory GetFactory()
         {
-            return new DbContextFactory(_scopeFactory);
+            return new(_scopeFactory);
         }
 
-        public class DbContextFactory : IDisposable
+        public class DbContextFactory : IDisposable, IAsyncDisposable
         {
             private readonly IServiceScope _scope;
             private readonly OsItemIndexDbContext _dbContext;
@@ -63,14 +42,36 @@ namespace OSItemIndex.Data.Database
                 return _dbContext;
             }
 
-            /// <summary>
-            ///     Disposes our dbContext and scopeFactory
-            /// </summary>
             public void Dispose()
             {
-                _dbContext.Dispose();
-                _scope.Dispose();
+                Dispose(true);
                 GC.SuppressFinalize(this);
+            }
+
+            public async ValueTask DisposeAsync()
+            {
+                await DisposeAsyncCore();
+
+                Dispose(false);
+
+#pragma warning disable CA1816 // Dispose methods should call SuppressFinalize
+                GC.SuppressFinalize(this);
+#pragma warning restore CA1816 // Dispose methods should call SuppressFinalize
+            }
+
+            protected virtual void Dispose(bool disposing)
+            {
+                if (!disposing)
+                    return;
+
+                _scope.Dispose();
+                _dbContext.Dispose();
+            }
+
+            protected virtual async ValueTask DisposeAsyncCore()
+            {
+                _scope.Dispose();
+                await _dbContext.DisposeAsync();
             }
         }
     }
