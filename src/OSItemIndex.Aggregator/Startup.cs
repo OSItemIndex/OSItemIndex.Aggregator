@@ -36,7 +36,7 @@ namespace OSItemIndex.Aggregator
             services.AddHttpClient<RealtimePriceClient>();
 
             services.AddSingleton<IOsrsBoxService, OsrsBoxService>();
-            services.AddSingleton<IRealtimePricesService, RealtimePricesService>();
+            //services.AddSingleton<IRealtimePricesService, RealtimePricesService>();
 
             services.AddSingleton<IStatefulServiceRepository, StatefulServiceRepository>();
         }

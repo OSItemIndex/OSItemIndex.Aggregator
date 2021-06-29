@@ -6,6 +6,6 @@ namespace OSItemIndex.Aggregator.Services
     public interface IOsrsBoxClient
     {
         Task<ReleaseMonitoringProject> GetProjectDetailsAsync();
-        Task<HttpResponseMessage> GetRawItemsCompleteAsync();
+        Task<HttpResponseMessage> GetOsrsBoxItemsAsync();
     }
 }

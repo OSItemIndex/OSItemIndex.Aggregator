@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using OSItemIndex.Data;
 using Serilog;
 
 namespace OSItemIndex.Aggregator.Services
@@ -30,7 +32,7 @@ namespace OSItemIndex.Aggregator.Services
             }
         }
 
-        public async Task<HttpResponseMessage> GetRawItemsCompleteAsync()
+        public async Task<HttpResponseMessage> GetOsrsBoxItemsAsync()
         {
             try
             {
@@ -41,6 +43,26 @@ namespace OSItemIndex.Aggregator.Services
                 Log.Error(exception, "Failed to retrieve complete items from osrsbox static json api");
                 throw;
             }
+        }
+
+        public async Task<HttpResponseMessage> PostEntitiesAsync(EntityRepoUpdateRequest<OsrsBoxItem> request, string uri)
+        {
+            try
+            {
+                return await Client.PostAsJsonAsync(Endpoints.OsItemIndex.Api + uri, request);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception, "Failed to POST entities to {@Uri}", uri);
+                throw;
+            }
+        }
+
+        public async Task<HttpResponseMessage> PostEntitiesAsync(IEnumerable<OsrsBoxItem> entities, EntityRepoVersion version,
+                                                                 string uri)
+        {
+            return await PostEntitiesAsync(new EntityRepoUpdateRequest<OsrsBoxItem>
+                                               { Entities = entities, Version = version }, uri);
         }
     }
 }

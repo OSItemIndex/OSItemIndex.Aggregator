@@ -8,6 +8,11 @@
 
     public class Endpoints
     {
+        public class OsItemIndex
+        {
+            public const string Api = "http://localhost:5001";
+        }
+
         public class OsrsBox
         {
             public const string Project = "https://release-monitoring.org/api/project/32210"; // pypi project id 32210

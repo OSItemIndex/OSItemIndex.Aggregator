@@ -14,19 +14,20 @@ namespace OSItemIndex.Aggregator.Services
 
         public StatefulServiceRepository(IServiceProvider serviceProvider)
         {
-            // Finds our IStatefulService implementations, and stores them in Services to manipulate like a repository
+            // Finds our IStatefulService implementations, and stores them in a collection to manipulate like a repository
 
-            var statefulServiceTypes = typeof(IStatefulService)
+            var serviceTypes = typeof(IStatefulService)
                                        .GetTypeInfo()
                                        .Assembly.GetTypes()
-                                       .Where(a => typeof(IStatefulService).IsAssignableFrom(a) && !typeof(IStatefulService).IsEquivalentTo(a)); // any type that can be assignable from IStatefulService but isn't IStatefulService within the assembly
+                                       .Where(a => typeof(IStatefulService).IsAssignableFrom(a) && !typeof(IStatefulService).IsEquivalentTo(a)).ToList(); // any type that can be assignable from IStatefulService but isn't IStatefulService within the assembly
 
-            var statefulServices = statefulServiceTypes.Where(a => a.GetTypeInfo().IsClass && !a.GetTypeInfo().IsAbstract); // class implementations
+            var statefulServices = serviceTypes.Where(a => a.GetTypeInfo().IsClass && !a.GetTypeInfo().IsAbstract); // class implementations
 
-            Services =  statefulServiceTypes.Where(a => a.GetTypeInfo().IsInterface && statefulServices.Any(a.IsAssignableFrom)) // type is Interface, and any of the statefulServices is assignable from the type
-                                            .Select(a => serviceProvider.GetService(a) as IStatefulService) // get the service from the service provider, and "cast" with as to IStatefulService
-                                            .Where(a => a != null)
-                                            .OrderBy(a => a.ServiceName);
+            Services = serviceTypes
+                       .Where(a => a.GetTypeInfo().IsInterface && statefulServices.Any(a.IsAssignableFrom)) // type is Interface, and any of the statefulServices is assignable from the type
+                       .Select(a => serviceProvider.GetService(a) as IStatefulService) // get the service from the service provider, and "cast" with as to IStatefulService
+                       .Where(a => a != null)
+                       .OrderBy(a => a.ServiceName);
 
             Log.Information("Registered stateful services: {@Services}", Services);
         }
