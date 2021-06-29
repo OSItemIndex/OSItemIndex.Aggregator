@@ -326,13 +326,9 @@ namespace OSItemIndex.Data
         public class WeaponStance
         {
             [JsonPropertyName("attack_style")] public WeaponAttackStyle? AttackStyle { get; set; }
-
             [JsonPropertyName("attack_type")] public WeaponAttackType? AttackType { get; set; }
-
             [JsonPropertyName("boosts")] public WeaponBoosts? Boosts { get; set; }
-
             [JsonPropertyName("combat_style")] public WeaponCombatStyle? CombatStyle { get; set; }
-
             [JsonPropertyName("experience")] public WeaponExperienceStyle? Experience { get; set; }
         }
 
@@ -370,9 +366,7 @@ namespace OSItemIndex.Data
         public enum WeaponAttackType
         {
             [EnumMember(Value = "crush")] Crush,
-
-            [EnumMember(Value = "defensive casting")]
-            DefensiveCasting,
+            [EnumMember(Value = "defensive casting")] DefensiveCasting,
             [EnumMember(Value = "magic")] Magic,
             [EnumMember(Value = "ranged")] Ranged,
             [EnumMember(Value = "slash")] Slash,
@@ -383,14 +377,9 @@ namespace OSItemIndex.Data
         [JsonConverter(typeof(JsonStringEnumMemberConverter))]
         public enum WeaponBoosts
         {
-            [EnumMember(Value = "accuracy and damage")]
-            AccuracyAndDamage,
-
-            [EnumMember(Value = "attack range by 2 squares")]
-            AttackRangeBy2Squares,
-
-            [EnumMember(Value = "attack speed by 1 tick")]
-            AttackSpeedBy1Tick
+            [EnumMember(Value = "accuracy and damage")] AccuracyAndDamage,
+            [EnumMember(Value = "attack range by 2 squares")] AttackRangeBy2Squares,
+            [EnumMember(Value = "attack speed by 1 tick")] AttackSpeedBy1Tick
         }
 
         [JsonConverter(typeof(JsonStringEnumMemberConverter))]
@@ -438,13 +427,9 @@ namespace OSItemIndex.Data
             [EnumMember(Value = "attack")] Attack,
             [EnumMember(Value = "defence")] Defence,
             [EnumMember(Value = "magic")] Magic,
-
-            [EnumMember(Value = "magic and defence")]
-            MagicAndDefence,
+            [EnumMember(Value = "magic and defence")] MagicAndDefence,
             [EnumMember(Value = "ranged")] Ranged,
-
-            [EnumMember(Value = "ranged and defence")]
-            RangedAndDefence,
+            [EnumMember(Value = "ranged and defence")] RangedAndDefence,
             [EnumMember(Value = "shared")] Shared,
             [EnumMember(Value = "strength")] Strength
         }
