@@ -7,7 +7,7 @@
 /*** Original author: https://github.com/Lampjaw
  * Modified by https://github.com/Twinki14 for OSItemIndex
  * DesignTimeDbContextFactory: Design-time services such as ef core migrations need to be able to create a dbcontext of our db.
- * DesignTimeDbContextFactory provides an implementation of IDesignTimeDbContextFactory for to serve that purpose.
+ * DesignTimeDbContextFactory provides an implementation of IDesignTimeDbContextFactory to serve that purpose.
  */
 
 using System;

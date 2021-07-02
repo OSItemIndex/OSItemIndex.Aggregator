@@ -9,11 +9,11 @@ namespace OSItemIndex.Data.Database
     /// Ensures the <see cref="Microsoft.EntityFrameworkCore.DbContext"/> from a <see cref="IDbContextHelper"/> factory helper instance is 'initialized' according to the implementation as a hosted service.
     /// <remarks>Add as a hosted service after a <see cref="IDbContextHelper"/> singleton addition, but before any services injecting the <see cref="IDbContextHelper"/> factory helper.</remarks>
     /// </summary>
-    public class DatabaseInitializerService : IDatabaseInitializerService
+    public class DbInitializerService : IDbInitializerService
     {
         private readonly IServiceProvider _serviceProvider;
 
-        public DatabaseInitializerService(IServiceProvider serviceProvider)
+        public DbInitializerService(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
         }
@@ -31,7 +31,7 @@ namespace OSItemIndex.Data.Database
             }
         }
 
-        public async Task InitializeDatabaseAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken)
+        public async Task InitializeDatabaseAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
         {
             using (var scope = _serviceProvider.CreateScope())
             {
