@@ -1,10 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using Npgsql.Bulk;
 using OSItemIndex.Data;
+using OSItemIndex.Data.Database;
+using OSItemIndex.Data.Repositories;
 using Serilog;
 
 namespace OSItemIndex.Aggregator.Services
@@ -13,16 +16,22 @@ namespace OSItemIndex.Aggregator.Services
     {
         private Timer _timer;
         private bool _isWorking;
-        private readonly TimeSpan _interval = TimeSpan.FromSeconds(5);
+        private readonly TimeSpan _interval = TimeSpan.FromMinutes(15);
+
+        private string _version;
 
         private readonly OsrsBoxClient _client;
+        private readonly IDbContextHelper _context;
+        private readonly IEventRepository _events;
 
         public override string ServiceName => "osrsbox";
 
-        public OsrsBoxService(OsrsBoxClient client)
+        public OsrsBoxService(OsrsBoxClient client, IDbContextHelper context, IEventRepository events)
         {
             _isWorking = false;
             _client = client;
+            _context = context;
+            _events = events;
         }
 
         public override Task StartInternalAsync(CancellationToken cancellationToken)
@@ -47,9 +56,7 @@ namespace OSItemIndex.Aggregator.Services
 
         protected override Task<object> GetStatusAsync(CancellationToken cancellationToken)
         {
-            return base.GetStatusAsync(cancellationToken);
-
-            //return new { ActiveQueue = activeCountTask.Result, QueueLength = totalCountTask.Result };
+            return Task.FromResult(new { version = _version } as object);
         }
 
         private async void ExecuteAsync(object stateInfo)
@@ -68,21 +75,62 @@ namespace OSItemIndex.Aggregator.Services
 
         public async Task AggregateAsync()
         {
-            Log.Information("{@Service} requesting items-complete from osrsbox", ServiceName);
-            using var response = await _client.GetOsrsBoxItemsAsync();
-            try
+            Log.Information("{@Service} > checking remote osrsbox version", ServiceName);
+
+            var project = await _client.GetProjectDetailsAsync();
+            if (project == null)
             {
-                response.EnsureSuccessStatusCode();
-            }
-            catch (Exception e)
-            {
-                Log.Error(e, "Response status not OK");
-                Log.Debug("{@Response}", response);
+                Log.Fatal("{@Service} > failed to get osrsbox project details, null", ServiceName);
                 return;
             }
 
-            var items = await response.Content.ReadFromJsonAsync<Dictionary<string, OsrsBoxItem>>();
-            await _client.PostEntitiesAsync(items.Values, new EntityRepoVersion(), "/items");
+            Log.Information("{@Service} remote version > {@Version}", ServiceName, project.Version);
+            Log.Information("{@Service} local version > {@Version}", ServiceName, _version);
+
+            if (project.Version == _version) // no need to update, TODO
+            {
+                return;
+            }
+
+            _version = project.Version;
+
+            Log.Information("{@Service} requesting items-complete from osrsbox", ServiceName);
+
+            var items = await _client.GetOsrsBoxItemsAsync();
+            if (items == null)
+            {
+                Log.Fatal("{@Service} failed to get osrsbox items, null", ServiceName);
+                return;
+            }
+
+            await using (var factory = _context.GetFactory())
+            {
+                try
+                {
+                    var dbContext = factory.GetDbContext();
+                    var uploader = new NpgsqlBulkUploader(dbContext);
+
+                    var entityType = dbContext.Model.FindEntityType(typeof(OsrsBoxItem));
+                    var primKeyProp = entityType.FindPrimaryKey().Properties.Select(k => k.PropertyInfo).Single();
+                    var props = entityType.GetProperties().Select(o => o.PropertyInfo).ToArray();
+
+                    await uploader.InsertAsync(items, InsertConflictAction.UpdateProperty<OsrsBoxItem>(primKeyProp, props));
+
+                    var itemsEvent = new Event
+                    {
+                        Type = EventType.Update,
+                        Source = EventSource.Items,
+                        Details = new { version = _version, rowCount = await dbContext.Items.CountAsync() }
+                    };
+
+                    await _events.SubmitAsync(itemsEvent);
+                }
+                catch (NpgsqlException e)
+                {
+                    Log.Fatal(e, "Npgsql fatal failure");
+                    throw;
+                }
+            }
         }
 
         public void Dispose()

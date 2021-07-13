@@ -41,6 +41,7 @@ namespace OSItemIndex.Aggregator
             return Host.CreateDefaultBuilder(args).ConfigureWebHostDefaults(builder =>
             {
                 builder.UseStartup<Startup>()
+                       .UseUrls("http://*:5000")
                        .UseSerilog((context, configuration) =>
                        {
                            configuration.MinimumLevel.Override("Microsoft", LogEventLevel.Information)

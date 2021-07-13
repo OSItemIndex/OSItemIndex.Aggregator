@@ -21,9 +21,10 @@
 
         public class Realtime
         {
-            public const string PriceLatest = "https://prices.runescape.wiki/api/v1/osrs/latest";
-            public const string PriceFiveMin = "https://prices.runescape.wiki/api/v1/osrs/5m";
-            public const string PriceOneHour = "https://prices.runescape.wiki/api/v1/osrs/1h";
+            public const string Api = "https://prices.runescape.wiki/api/v1/osrs";
+            public const string Latest = "/latest";
+            public const string FiveMinute = "/5m";
+            public const string OneHour = "/1h";
         }
     }
 }

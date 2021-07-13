@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using OSItemIndex.Aggregator.Services;
 using OSItemIndex.Data.Database;
 using OSItemIndex.Data.Extensions;
+using OSItemIndex.Data.Repositories;
 
 namespace OSItemIndex.Aggregator
 {
@@ -36,14 +37,16 @@ namespace OSItemIndex.Aggregator
             services.AddHttpClient<RealtimePriceClient>();
 
             services.AddSingleton<IOsrsBoxService, OsrsBoxService>();
-            //services.AddSingleton<IRealtimePricesService, RealtimePricesService>();
+            services.AddSingleton<IRealtimePriceService, RealtimePricesService>();
 
+            services.AddSingleton<IEventRepository, EventRepository>();
             services.AddSingleton<IStatefulServiceRepository, StatefulServiceRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UsePathBase("/api");
             app.UseRouting();
             app.UseHttpsRedirection();
             app.UseEndpoints(endpoints =>
