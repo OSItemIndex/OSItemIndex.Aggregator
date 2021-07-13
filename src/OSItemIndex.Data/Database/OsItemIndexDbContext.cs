@@ -11,6 +11,7 @@ namespace OSItemIndex.Data.Database
         public DbSet<RealtimeItemPrice.FiveMinutePrice> PricesRealtimeFiveMinutes { get; set; }
         public DbSet<RealtimeItemPrice.OneHourPrice> PricesRealtimeOneHour { get; set; }
 
+        public DbSet<Event> Events { get; set; }
 
         public OsItemIndexDbContext(DbContextOptions<OsItemIndexDbContext> options) : base(options) { }
 
