@@ -1,35 +1,60 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
+using OSItemIndex.Data;
+using System.Text.Json;
+using OSItemIndex.Data.Extensions;
 using Serilog;
 
 namespace OSItemIndex.Aggregator.Services
 {
     public class RealtimePriceClient : IRealtimePriceClient
     {
-        private HttpClient Client { get; }
+        private readonly HttpClient _client;
 
         public RealtimePriceClient(HttpClient client)
         {
             client.DefaultRequestHeaders.Add("User-Agent", Constants.ObserverUserAgent);
-            Client = client;
+            _client = client;
         }
 
-        public async Task<HttpResponseMessage> GetRawLatestPricesAsync() => await GetRawResponseAsync(Endpoints.Realtime.PriceLatest);
-        public async Task<HttpResponseMessage> GetRawFiveMinutePricesAsync() => await GetRawResponseAsync(Endpoints.Realtime.PriceFiveMin);
-        public async Task<HttpResponseMessage> GetRawOneHourPricesAsync() => await GetRawResponseAsync(Endpoints.Realtime.PriceOneHour);
-
-        private async Task<HttpResponseMessage> GetRawResponseAsync(string uri)
+        public async Task<IEnumerable<T>?> GetPricesAsync<T>(string uri) where T: PriceEntity
         {
-            try
+            using var response = await _client.GetAsync(Endpoints.Realtime.Api + uri);
             {
-                return await Client.GetAsync(uri);
+                try
+                {
+                    response.EnsureSuccessStatusCode();
+                    var json = await response.Content.ReadFromJsonAnonymousAsync(new
+                    {
+                        data = new Dictionary<string, T>(),
+                        timestamp = (long?) null
+                    });
+
+                    if (json != null)
+                    {
+                        foreach (var (key, value) in json.data)
+                        {
+                            value.Id = int.Parse(key);
+                            if (json.timestamp != null && value is RealtimeItemPrice.AveragePrice price)
+                            {
+                                price.Timestamp = DateTimeOffset.FromUnixTimeMilliseconds((long) json.timestamp).UtcDateTime;
+                            }
+                        }
+                        return json.data.Values;
+                    }
+                }
+                catch (HttpRequestException e)
+                {
+                    Log.Error(e, "Response status not OK");
+                }
+                catch (JsonException e)
+                {
+                    Log.Error(e, "JSON exception caught");
+                }
             }
-            catch (Exception exception)
-            {
-                Log.Error(exception, "Failed to retrieve item prices from realtime-prices api ({$Uri})", uri);
-                throw;
-            }
+            return null;
         }
     }
 }

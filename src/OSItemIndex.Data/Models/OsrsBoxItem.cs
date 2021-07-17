@@ -61,7 +61,7 @@ namespace OSItemIndex.Data
         /// The examine text for the item.
         /// </summary>
         [JsonPropertyName("examine")]
-        public string Examine { get; set; }
+        public string? Examine { get; set; }
 
         /// <summary>
         /// The high alchemy value of the item (cost * 0.6).
@@ -139,7 +139,7 @@ namespace OSItemIndex.Data
         /// Date the item was released (in ISO8601 format).
         /// </summary>
         [JsonPropertyName("release_date")]
-        public string ReleaseDate { get; set; }
+        public string? ReleaseDate { get; set; }
 
         /// <summary>
         /// If the item is stackable (in inventory).
@@ -179,22 +179,16 @@ namespace OSItemIndex.Data
         public double? Weight { get; set; }
 
         /// <summary>
-        /// The OSRS Wiki Exchange URL.
-        /// </summary>
-        [JsonPropertyName("wiki_exchange")]
-        public string WikiExchange { get; set; }
-
-        /// <summary>
         /// The OSRS Wiki name for the item.
         /// </summary>
         [JsonPropertyName("wiki_name")]
-        public string WikiName { get; set; }
+        public string? WikiName { get; set; }
 
         /// <summary>
         /// The OSRS Wiki URL (possibly including anchor link).
         /// </summary>
         [JsonPropertyName("wiki_url")]
-        public string WikiUrl { get; set; }
+        public string? WikiUrl { get; set; }
     }
 
     /// <summary>

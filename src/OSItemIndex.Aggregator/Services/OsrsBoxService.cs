@@ -1,17 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.IO;
-using System.Text;
-using System.Text.Json;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using OSItemIndex.Aggregator.Utils;
+using Npgsql.Bulk;
 using OSItemIndex.Data;
 using OSItemIndex.Data.Database;
-using OSItemIndex.Data.Extensions;
+using OSItemIndex.Data.Repositories;
 using Serilog;
 
 namespace OSItemIndex.Aggregator.Services
@@ -20,78 +16,22 @@ namespace OSItemIndex.Aggregator.Services
     {
         private Timer _timer;
         private bool _isWorking;
-        private readonly TimeSpan _interval = TimeSpan.FromMinutes(60);
+        private readonly TimeSpan _interval = TimeSpan.FromMinutes(15);
+
+        private string _version;
 
         private readonly OsrsBoxClient _client;
-        private readonly IDbContextHelper _dbContextHelper;
-
-        private readonly string _sqlCreate;
-        private readonly string _sqlCopy;
-        private readonly string _sqlUpsert;
-        private readonly string _sqlLock;
+        private readonly IDbContextHelper _context;
+        private readonly IEventRepository _events;
 
         public override string ServiceName => "osrsbox";
 
-        public OsrsBoxService(OsrsBoxClient client, IDbContextHelper dbContextHelper)
+        public OsrsBoxService(OsrsBoxClient client, IDbContextHelper context, IEventRepository events)
         {
             _isWorking = false;
             _client = client;
-            _dbContextHelper = dbContextHelper;
-
-            // Collect information from our dbmodel so we can dynamically construct our sql statements
-            using var factory = _dbContextHelper.GetFactory();
-            {
-                var dbContext = factory.GetDbContext();
-
-                var model = dbContext.Model;
-                var tableEntityType = model.FindEntityType(typeof(OsrsBoxItem));
-                var tableColumnNames = new List<string>
-                {
-                    "id",
-                    "name",
-                    "duplicate",
-                    "noted",
-                    "placeholder",
-                    "stackable",
-                    "tradeable_on_ge",
-                    "last_updated",
-                    "document"
-                };
-
-                var tableName = tableEntityType.GetTableName();
-                var tempTableName = $"_temp_{tableName}";
-
-                _sqlCreate = $"CREATE TEMP TABLE {tempTableName} (LIKE {tableName} INCLUDING DEFAULTS) ON COMMIT DROP";
-                _sqlLock = $"LOCK TABLE {tableName} IN ACCESS EXCLUSIVE MODE";
-
-                var builder = new StringBuilder();
-
-                builder.AppendFormat("COPY {0} (", tempTableName);
-                builder.AppendJoin(",", tableColumnNames);
-                builder.Append(") FROM STDIN (FORMAT BINARY)");
-
-                _sqlCopy = builder.ToString();
-
-                builder.Clear();
-                builder.AppendFormat("INSERT INTO {0} SELECT * FROM {1} ON CONFLICT (id) DO UPDATE SET ", tableName, tempTableName);
-                using (var en = tableColumnNames.GetEnumerator())
-                {
-                    en.MoveNext();
-
-                    if (en.Current != null)
-                    {
-                        builder.AppendFormat("{0}=EXCLUDED.{0}", en.Current);
-                    }
-
-                    while (en.MoveNext())
-                    {
-                        builder.Append(',');
-                        builder.AppendFormat("{0}=EXCLUDED.{0}", en.Current);
-
-                    }
-                }
-                _sqlUpsert = builder.ToString();
-            }
+            _context = context;
+            _events = events;
         }
 
         public override Task StartInternalAsync(CancellationToken cancellationToken)
@@ -116,9 +56,7 @@ namespace OSItemIndex.Aggregator.Services
 
         protected override Task<object> GetStatusAsync(CancellationToken cancellationToken)
         {
-            return base.GetStatusAsync(cancellationToken);
-
-            //return new { ActiveQueue = activeCountTask.Result, QueueLength = totalCountTask.Result };
+            return Task.FromResult(new { version = _version } as object);
         }
 
         private async void ExecuteAsync(object stateInfo)
@@ -137,86 +75,60 @@ namespace OSItemIndex.Aggregator.Services
 
         public async Task AggregateAsync()
         {
-            Log.Information("{@Service} requesting items-complete from our osrsbox repository", ServiceName);
-            using var response = await _client.GetRawItemsCompleteAsync();
-            try
+            Log.Information("{@Service} > checking remote osrsbox version", ServiceName);
+
+            var project = await _client.GetProjectDetailsAsync();
+            if (project == null)
             {
-                response.EnsureSuccessStatusCode();
-            }
-            catch (Exception e)
-            {
-                Log.Error(e, "items-complete response status not OK");
-                Log.Debug("Response: {@Response}", response);
-                throw;
+                Log.Fatal("{@Service} > failed to get osrsbox project details, null", ServiceName);
+                return;
             }
 
-            await using var stream = await response.Content.ReadAsStreamAsync();
-            using var dbFactory = _dbContextHelper.GetFactory();
+            Log.Information("{@Service} remote version > {@Version}", ServiceName, project.Version);
+            Log.Information("{@Service} local version > {@Version}", ServiceName, _version);
+
+            if (project.Version == _version) // no need to update, TODO
             {
-                int itemsImported;
-                var dbContext = dbFactory.GetDbContext();
-                var conn = dbContext.Database.GetNpgsqlConnection();
-                var connOpenedHere = await conn.EnsureConnectedAsync();
-                var transaction = dbContext.EnsureOrStartTransaction(IsolationLevel.ReadCommitted);
+                return;
+            }
+
+            _version = project.Version;
+
+            Log.Information("{@Service} requesting items-complete from osrsbox", ServiceName);
+
+            var items = await _client.GetOsrsBoxItemsAsync();
+            if (items == null)
+            {
+                Log.Fatal("{@Service} failed to get osrsbox items, null", ServiceName);
+                return;
+            }
+
+            await using (var factory = _context.GetFactory())
+            {
                 try
                 {
-                    await conn.ExecuteNonQueryAsync(_sqlCreate); // Create temp table
-                    await using (var importer = conn.BeginBinaryImport(_sqlCopy))
-                    {
-                        ImportFromContentStream(stream, importer, out itemsImported);
-                        await importer.CompleteAsync();
-                    }
-                    await conn.ExecuteNonQueryAsync(_sqlLock);   // Lock table
-                    await conn.ExecuteNonQueryAsync(_sqlUpsert); // Upsert into main table
-                    if (transaction != null)
-                        await transaction.CommitAsync();
-                }
-                catch
-                {
-                    try
-                    {
-                        if (transaction != null)
-                            await transaction.RollbackAsync();
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
+                    var dbContext = factory.GetDbContext();
+                    var uploader = new NpgsqlBulkUploader(dbContext);
 
+                    var entityType = dbContext.Model.FindEntityType(typeof(OsrsBoxItem));
+                    var primKeyProp = entityType.FindPrimaryKey().Properties.Select(k => k.PropertyInfo).Single();
+                    var props = entityType.GetProperties().Select(o => o.PropertyInfo).ToArray();
+
+                    await uploader.InsertAsync(items, InsertConflictAction.UpdateProperty<OsrsBoxItem>(primKeyProp, props));
+
+                    var itemsEvent = new Event
+                    {
+                        Type = EventType.Update,
+                        Source = EventSource.Items,
+                        Details = new { version = _version, rowCount = await dbContext.Items.CountAsync() }
+                    };
+
+                    await _events.SubmitAsync(itemsEvent);
+                }
+                catch (NpgsqlException e)
+                {
+                    Log.Fatal(e, "Npgsql fatal failure");
                     throw;
-                }
-                finally
-                {
-                    if (connOpenedHere)
-                        await conn.CloseAsync();
-                }
-
-                Log.Information("{@Service} upserted {@Inserted} items into to our db", ServiceName, itemsImported);
-            }
-
-            static void ImportFromContentStream(Stream stream, NpgsqlBinaryImporter importer, out int imported)
-            {
-                imported = 0;
-                using var jSr = new Utf8JsonStreamReader(stream, 32 * 1024);
-                while (jSr.Read())
-                {
-                    if (jSr.CurrentDepth != 1 || jSr.TokenType != JsonTokenType.StartObject)
-                        continue;
-
-                    using var doc = jSr.GetJsonDocument();
-                    {
-                        importer.StartRow();
-                        importer.Write(doc.RootElement.GetProperty("id").GetInt32());
-                        importer.Write(doc.RootElement.GetProperty("name").GetString());
-                        importer.Write(doc.RootElement.GetProperty("duplicate").GetBoolean());
-                        importer.Write(doc.RootElement.GetProperty("noted").GetBoolean());
-                        importer.Write(doc.RootElement.GetProperty("placeholder").GetBoolean());
-                        importer.Write(doc.RootElement.GetProperty("stackable").GetBoolean());
-                        importer.Write(doc.RootElement.GetProperty("tradeable_on_ge").GetBoolean());
-                        importer.Write(doc.RootElement.GetProperty("last_updated").GetDateTime());
-                        importer.Write(doc.RootElement.GetRawText());
-                        imported++;
-                    }
                 }
             }
         }
