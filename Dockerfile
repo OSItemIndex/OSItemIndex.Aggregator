@@ -18,5 +18,4 @@ RUN dotnet publish "OSItemIndex.Aggregator.csproj" -c Release -o /app/publish
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-LABEL name="ositemindex.aggregator"
 ENTRYPOINT ["dotnet", "OSItemIndex.Aggregator.dll"]
