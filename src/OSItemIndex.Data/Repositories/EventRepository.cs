@@ -43,7 +43,7 @@ namespace OSItemIndex.Data.Repositories
 
                 e.Timestamp = DateTime.UtcNow;
 
-                await dbContext.Events.AddAsync(e);
+                await dbContext.Set<Event>().AddAsync(e);
                 await dbContext.SaveChangesAsync();
 
                 Log.Information("Event submitted > {@Event}", e);
