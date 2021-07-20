@@ -6,7 +6,12 @@ namespace OSItemIndex.Data.Database
     public class OsItemIndexDbContext : DbContext
     {
         public DbSet<OsrsBoxItem> Items { get; set; }
-        public DbSet<RealtimeItemPrice> PricesRealtime { get; set; }
+
+        public DbSet<RealtimeItemPrice.LatestPrice> PricesRealtimeLatest { get; set; }
+        public DbSet<RealtimeItemPrice.FiveMinutePrice> PricesRealtimeFiveMinutes { get; set; }
+        public DbSet<RealtimeItemPrice.OneHourPrice> PricesRealtimeOneHour { get; set; }
+
+        public DbSet<Event> Events { get; set; }
 
         public OsItemIndexDbContext(DbContextOptions<OsItemIndexDbContext> options) : base(options) { }
 
