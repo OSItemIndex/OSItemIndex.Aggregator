@@ -54,7 +54,7 @@ namespace OSItemIndex.Data
         /// The equipment bonuses of equipable armour/weapons.
         /// </summary>
         [JsonPropertyName("equipment")]
-        [Column(TypeName = "json")]
+        [Column(TypeName = "jsonb")]
         public Equipment? Equipment { get; set; }
 
         /// <summary>
@@ -169,7 +169,7 @@ namespace OSItemIndex.Data
         /// The weapon bonuses including attack speed, type and stance.
         /// </summary>
         [JsonPropertyName("weapon")]
-        [Column(TypeName = "json")]
+        [Column(TypeName = "jsonb")]
         public Equipment.WeaponInfo? Weapon { get; set; }
 
         /// <summary>
@@ -290,7 +290,7 @@ namespace OSItemIndex.Data
         /// The equipment slot associated with the item (e.g., head).
         /// </summary>
         [JsonPropertyName("slot")]
-        [Column(TypeName = "json")]
+        [Column(TypeName = "jsonb")]
         public EquipmentSlot? Slot { get; set; }
 
         /// <summary>
