@@ -1,9 +1,11 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 
 namespace OSItemIndex.Data
 {
+    [JsonConverter(typeof(JsonStringEnumMemberConverter))]
     public enum EventType
     {
         [EnumMember(Value = "seed")] Seed,
@@ -11,13 +13,14 @@ namespace OSItemIndex.Data
     }
 
     [Flags]
+    [JsonConverter(typeof(JsonStringEnumMemberConverter))]
     public enum EventSource
     {
         [EnumMember(Value = "items")] Items = 1 << 0,
         [EnumMember(Value = "prices")] Prices = 1 << 1,
-        [EnumMember(Value = "prices_realtime_latest")] PricesRealtimeLatest = 1 << 2,
-        [EnumMember(Value = "prices_realtime_5m")] PricesRealtimeFiveMinute = 1 << 3,
-        [EnumMember(Value = "prices_realtime_1h")] PricesRealtimeOneHour = 1 << 4,
+        [EnumMember(Value = "realtime_latest")] PricesRealtimeLatest = 1 << 2,
+        [EnumMember(Value = "realtime_5m")] PricesRealtimeFiveMinute = 1 << 3,
+        [EnumMember(Value = "realtime_1h")] PricesRealtimeOneHour = 1 << 4,
     }
 
     public class Event
@@ -27,7 +30,7 @@ namespace OSItemIndex.Data
         public EventType Type { get; set; }
         public EventSource Source { get; set; }
 
-        [Column(TypeName = "json")]
-        public object? Details { get; set; } // manually passed
+        [Column(TypeName = "jsonb")]
+        public object? Details { get; set; }
     }
 }
