@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OSItemIndex.Aggregator.Services;
@@ -11,6 +12,7 @@ namespace OSItemIndex.Aggregator
 {
     public class Startup
     {
+        private const string CorsPolicy = "_corsPolicy";
         private readonly IConfiguration _configuration;
 
         public Startup(IWebHostEnvironment env)
@@ -29,6 +31,24 @@ namespace OSItemIndex.Aggregator
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options =>
+            {
+                options.AddPolicy(CorsPolicy,
+                                  builder =>
+                                  {
+                                      builder.WithOrigins("https://ositemindex.com", "http://localhost:8080")
+                                             .AllowAnyHeader();
+                                  });
+            });
+
+            services.AddResponseCompression(options =>
+            {
+                options.EnableForHttps = true;
+                options.Providers.Add<BrotliCompressionProvider>();
+                options.Providers.Add<GzipCompressionProvider>();
+            });
+
+
             services.AddControllers();
             services.AddEntityFrameworkContext(_configuration);
             services.AddSingleton<IDbInitializerService, DbInitializerService>();
@@ -44,16 +64,14 @@ namespace OSItemIndex.Aggregator
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public static void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseCors(CorsPolicy);
             app.UsePathBase("/api");
             app.UseRouting();
             app.UseHttpsRedirection();
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
-            app.MigrateDatabases();
+            app.UseResponseCompression();
+            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
         }
     }
 }
