@@ -122,7 +122,7 @@ namespace OSItemIndex.Aggregator.Services
                         Source = EventSource.Prices | source
                     };
 
-                    await _events.SubmitAsync(pricesEvent);
+                    await _events.AddAsync(pricesEvent);
                 }
                 catch (NpgsqlException e)
                 {

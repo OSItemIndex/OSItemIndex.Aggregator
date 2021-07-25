@@ -123,7 +123,7 @@ namespace OSItemIndex.Aggregator.Services
                         Details = new { version = _version, rowCount = await dbContext.Items.CountAsync() }
                     };
 
-                    await _events.SubmitAsync(itemsEvent);
+                    await _events.AddAsync(itemsEvent);
                 }
                 catch (NpgsqlException e)
                 {
