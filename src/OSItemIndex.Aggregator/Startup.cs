@@ -48,7 +48,6 @@ namespace OSItemIndex.Aggregator
                 options.Providers.Add<GzipCompressionProvider>();
             });
 
-
             services.AddControllers();
             services.AddEntityFrameworkContext(_configuration);
             services.AddSingleton<IDbInitializerService, DbInitializerService>();
@@ -69,7 +68,6 @@ namespace OSItemIndex.Aggregator
             app.UseCors(CorsPolicy);
             app.UsePathBase("/api");
             app.UseRouting();
-            app.UseHttpsRedirection();
             app.UseResponseCompression();
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
         }
