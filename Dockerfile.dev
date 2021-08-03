@@ -1,0 +1,12 @@
+FROM mcr.microsoft.com/dotnet/sdk:5.0 AS base
+
+FROM mcr.microsoft.com/dotnet/sdk:5.0 AS publish
+WORKDIR /app
+COPY . .
+WORKDIR /app/src/OSItemIndex.Aggregator
+RUN dotnet restore
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/src .
+ENTRYPOINT ["dotnet", "watch", "run", "-p", "OSItemIndex.Aggregator"]
