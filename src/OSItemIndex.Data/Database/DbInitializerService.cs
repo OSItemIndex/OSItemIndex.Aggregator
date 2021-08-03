@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace OSItemIndex.Data.Database
@@ -26,7 +27,7 @@ namespace OSItemIndex.Data.Database
                 using (var factory = dbContextHelper.GetFactory())
                 {
                     var dbContext = factory.GetDbContext();
-                    dbContext.Database.EnsureCreated(); // TODO ~ Look into migrations
+                    dbContext.Database.MigrateAsync();
                 }
             }
         }
@@ -39,7 +40,7 @@ namespace OSItemIndex.Data.Database
                 using (var factory = dbContextHelper.GetFactory())
                 {
                     var dbContext = factory.GetDbContext();
-                    await dbContext.Database.EnsureCreatedAsync(cancellationToken); // TODO ~ Look into migrations
+                    await dbContext.Database.MigrateAsync(cancellationToken);
                 }
             }
         }
