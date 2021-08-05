@@ -11,12 +11,19 @@ jobs:
     runs-on: ubuntu-latest # The type of runner that the job will run on
 
     steps:
-      - id: repo_name
+      - id: _regex_repo_name # Remove 'ositemindex.' in the repo name 
+        uses: frabert/replace-string-action@v2.0
+        with:
+          pattern: '^\w+.'
+          string: ${{ github.event.repository.name }}
+          replace-with: ''
+
+      - id: repo_name # Lowercase repo name
         uses: ASzc/change-string-case-action@v1
         with:
-          string: ${{ github.event.repository.name }}
+          string: ${{ steps._regex_repo_name.outputs.replaced }}
           
-      - id: repo_owner
+      - id: repo_owner # Lowercase repo owner
         uses: ASzc/change-string-case-action@v1
         with:
           string: ${{ github.repository_owner }}
