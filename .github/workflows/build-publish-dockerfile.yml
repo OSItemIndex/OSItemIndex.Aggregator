@@ -1,4 +1,4 @@
-name: Build and publish docker image 
+name: Build and publish docker image
 
 # Controls when the workflow will run
 on:
@@ -11,18 +11,18 @@ jobs:
     runs-on: ubuntu-latest # The type of runner that the job will run on
 
     steps:
-      - id: _regex_repo_name # Remove 'ositemindex.' in the repo name 
+      - id: _regex_repo_name # Remove 'ositemindex.' in the repo name
         uses: frabert/replace-string-action@v2.0
         with:
           pattern: '^\w+.'
           string: ${{ github.event.repository.name }}
-          replace-with: ''
+          replace-with: ""
 
       - id: repo_name # Lowercase repo name
         uses: ASzc/change-string-case-action@v1
         with:
           string: ${{ steps._regex_repo_name.outputs.replaced }}
-          
+
       - id: repo_owner # Lowercase repo owner
         uses: ASzc/change-string-case-action@v1
         with:
@@ -51,6 +51,6 @@ jobs:
         with:
           push: true # Will only build if this is not here
           context: .
-          tags: | 
+          tags: |
             ghcr.io/${{ steps.repo_owner.outputs.lowercase }}/${{ steps.repo_name.outputs.lowercase }}:latest
             ghcr.io/${{ steps.repo_owner.outputs.lowercase }}/${{ steps.repo_name.outputs.lowercase }}:${{ steps.nbgv.outputs.SimpleVersion }}
