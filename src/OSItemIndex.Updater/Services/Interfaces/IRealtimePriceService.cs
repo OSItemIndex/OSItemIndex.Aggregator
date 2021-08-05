@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using OSItemIndex.Data;
 
-namespace OSItemIndex.Aggregator.Services
+namespace OSItemIndex.Updater.Services
 {
     public interface IRealtimePriceService : IStatefulService
     {

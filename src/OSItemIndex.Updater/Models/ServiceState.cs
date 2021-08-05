@@ -1,4 +1,4 @@
-﻿namespace OSItemIndex.Aggregator
+﻿namespace OSItemIndex.Updater
 {
     public class ServiceState
     {

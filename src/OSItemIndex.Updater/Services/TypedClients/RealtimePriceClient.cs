@@ -7,7 +7,7 @@ using System.Text.Json;
 using OSItemIndex.Data.Extensions;
 using Serilog;
 
-namespace OSItemIndex.Aggregator.Services
+namespace OSItemIndex.Updater.Services
 {
     public class RealtimePriceClient : IRealtimePriceClient
     {

@@ -21,4 +21,8 @@
       <ProjectReference Include="..\OSItemIndex.Data\OSItemIndex.Data.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="OSItemIndex.Updater.csproj.DotSettings" />
+    </ItemGroup>
+
 </Project>

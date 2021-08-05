@@ -1,9 +1,9 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using OSItemIndex.Aggregator.Services;
+using OSItemIndex.Updater.Services;
 
-namespace OSItemIndex.Aggregator.Controllers
+namespace OSItemIndex.Updater.Controllers
 {
     [Route("[controller]")]
     [ApiController]

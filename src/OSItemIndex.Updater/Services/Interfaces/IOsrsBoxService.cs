@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace OSItemIndex.Aggregator.Services
+namespace OSItemIndex.Updater.Services
 {
     public interface IOsrsBoxService : IStatefulService
     {

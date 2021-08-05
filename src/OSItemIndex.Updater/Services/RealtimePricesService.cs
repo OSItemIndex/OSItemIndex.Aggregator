@@ -10,7 +10,7 @@ using OSItemIndex.Data.Database;
 using OSItemIndex.Data.Repositories;
 using Serilog;
 
-namespace OSItemIndex.Aggregator.Services
+namespace OSItemIndex.Updater.Services
 {
     public class RealtimePricesService : StatefulService, IRealtimePriceService, IDisposable
     {

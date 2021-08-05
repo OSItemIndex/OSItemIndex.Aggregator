@@ -2,13 +2,13 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using OSItemIndex.Aggregator.Services;
+using OSItemIndex.Updater.Services;
 using OSItemIndex.Data.Database;
 using Serilog;
 using Serilog.Events;
 using Serilog.Exceptions;
 
-namespace OSItemIndex.Aggregator
+namespace OSItemIndex.Updater
 {
     internal static class Program
     {

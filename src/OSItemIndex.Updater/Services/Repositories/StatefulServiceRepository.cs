@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
 
-namespace OSItemIndex.Aggregator.Services
+namespace OSItemIndex.Updater.Services
 {
     public class StatefulServiceRepository : IStatefulServiceRepository
     {

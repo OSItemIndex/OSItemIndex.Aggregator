@@ -3,12 +3,12 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using OSItemIndex.Aggregator.Services;
+using OSItemIndex.Updater.Services;
 using OSItemIndex.Data.Database;
 using OSItemIndex.Data.Extensions;
 using OSItemIndex.Data.Repositories;
 
-namespace OSItemIndex.Aggregator
+namespace OSItemIndex.Updater
 {
     public class Startup
     {

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using OSItemIndex.Data;
 using Serilog;
 
-namespace OSItemIndex.Aggregator.Services
+namespace OSItemIndex.Updater.Services
 {
     public class OsrsBoxClient : IOsrsBoxClient
     {
