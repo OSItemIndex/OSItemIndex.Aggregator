@@ -11,6 +11,16 @@ jobs:
     runs-on: ubuntu-latest # The type of runner that the job will run on
 
     steps:
+      - id: repo_name
+        uses: ASzc/change-string-case-action@v1
+        with:
+          string: ${{ github.event.repository.name }}
+          
+      - id: repo_owner
+        uses: ASzc/change-string-case-action@v1
+        with:
+          string: ${{ github.repository_owner }}
+
       - name: Checkout
         uses: actions/checkout@v2
         with:
@@ -21,16 +31,19 @@ jobs:
         id: nbgv
         with:
           setAllVars: false
-          
-      - name: Build and Publish as versioned
-        uses: VaultVulp/gp-docker-action@1.1.8
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }} # Provide GITHUB_TOKEN to login into the GitHub Packages
-          image-name: ositemindex.aggregator # Provide only Docker image name, tag will be automatically set to latest
-          image-tag: ${{ steps.nbgv.outputs.SimpleVersion }}
 
-      - name: Build and Publish as latest
-        uses: VaultVulp/gp-docker-action@1.1.8
+      - name: Login to ghcr registry
+        uses: docker/login-action@v1
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }} # Provide GITHUB_TOKEN to login into the GitHub Packages
-          image-name: ositemindex.aggregator # Provide only Docker image name, tag will be automatically set to latest
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.PACKAGES_PAT }}
+
+      - name: Build and push docker image
+        uses: docker/build-push-action@v2
+        with:
+          push: true # Will only build if this is not here
+          context: .
+          tags: | 
+            ghcr.io/${{ steps.repo_owner.outputs.lowercase }}/${{ steps.repo_name.outputs.lowercase }}:latest
+            ghcr.io/${{ steps.repo_owner.outputs.lowercase }}/${{ steps.repo_name.outputs.lowercase }}:${{ steps.nbgv.outputs.SimpleVersion }}
